@@ -1,10 +1,25 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import cartItems from '../constants/cartItems';
+import axios from 'axios';
+
+export const fetchCartItems = createAsyncThunk(
+  'cart/fetchCartItems',
+  async (_, thunkAPI ) => {
+    try {
+      const response = await axios.get("http://localhost:8080/musics");
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
 
 const initialState = {
-  albums: cartItems,
+  albums: [],
   totalQuantity: 0,
   totalPrice: 0,
+  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  error: null,
 };
 
 const cartSlice = createSlice({
@@ -43,6 +58,23 @@ const cartSlice = createSlice({
       state.totalPrice = totalPrice;
     }
   },
+
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCartItems.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchCartItems.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.albums = action.payload;
+      })
+      .addCase(fetchCartItems.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        alert(action.payload);
+      });
+  }
 });
 
 export const { increase, decrease, removeItem, clearCart, calculateTotals } = cartSlice.actions;

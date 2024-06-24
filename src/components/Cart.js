@@ -1,9 +1,10 @@
 import React, {useEffect} from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { increase, decrease, removeItem, clearCart, calculateTotals } from '../redux/cartSlice';
+import { increase, decrease, removeItem, clearCart, calculateTotals, fetchCartItems } from '../redux/cartSlice';
 import styled from 'styled-components';
 import { openModal } from '../redux/modalSlice';
 import Modal from './Modal';
+import Loading from 'react-loading';
 
 const Container = styled.div`
   padding: 20px;
@@ -13,7 +14,10 @@ const Container = styled.div`
 const Header = styled.h1`
   text-align: center;
 `;
-
+const Text = styled.div`
+  text-align: center;
+  margin-bottom : 50px;
+`;
 const Button = styled.button`
   background: #adacad;
   border-radius: 3px;
@@ -51,9 +55,13 @@ const TotalInfo = styled.div`
 
 function Cart() {
 
-  const { albums, totalQuantity, totalPrice } = useSelector(state => state.cart);
+  const { albums, totalQuantity, totalPrice, status, error } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   
+  useEffect(() => {
+    dispatch(fetchCartItems());
+  }, [dispatch]);
+
   useEffect(() => {
     dispatch(calculateTotals());
   }, [albums, dispatch]);
@@ -70,16 +78,22 @@ function Cart() {
     dispatch(removeItem({id}));
   };
 
-  const handleClearCart = () => {
-    dispatch(clearCart());
-  };
   const handleOpenModal = () => {
     dispatch(openModal());
   };
-  return (
-    <Container>
-      <Header>당신이 선택한 음반</Header>
-      
+  let content;
+
+  if (status === 'loding') {
+    content = (
+      <div style={{ display: 'flex', justifyContent: 'center',
+        alignItems: 'center', height:'100vh'
+      }}>
+        <Loading type='spin' color='#d64d7e' height={50} width={50} />
+      </div>
+    )
+  }
+  else if(status === 'succeeded') {
+    content = (
       <AlbumList>
         {albums.map( album => (
           <AlbumItem key={album.id}>
@@ -93,6 +107,15 @@ function Cart() {
           </AlbumItem> 
         ))}
       </AlbumList>
+    );
+  } else if(status === 'failed') {
+    content = <p>{error}</p>
+  }
+  return (
+    <Container>
+      <Header>당신이 선택한 음반</Header>
+      <Text>고객님이 좋아하는 옵션을 담아보세요 ~ !</Text>
+      {content}
       <Button onClick={handleOpenModal}>Clear Cart</Button>
       <TotalInfo>
         <h2>Total Quantity: {totalQuantity}</h2>

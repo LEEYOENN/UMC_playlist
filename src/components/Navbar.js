@@ -38,10 +38,10 @@ const NavItem = styled.li`
   margin: 0 1rem;
 `
 function Navbar() {
-  
+
   return (
     <NavbarContainer>
-      <NavLogo to="/">UMC MUSIC</NavLogo>
+      <NavLogo to="/">REAL DATA UMC PLAYLIST</NavLogo>
       <NavItems>
         <NavItem>
           <NavLink to="/">Cart</NavLink>
